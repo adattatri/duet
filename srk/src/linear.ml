@@ -865,3 +865,30 @@ module PartialLinearMap = struct
     in
     (mS, make mT guard)
 end
+
+(* CHECK: might be able to simplify this, if all dimensions are stored explicitly *)
+let get_max_dim qqvec = 
+  let qqvec_enum = QQVector.enum qqvec in
+  BatEnum.fold (fun max_dim (_, dim) -> 
+    if dim > max_dim then dim
+    else max_dim
+  ) 0 qqvec_enum
+
+(* newly added functions start here *)
+let qqvector_to_zzarray dim qqvec = 
+  assert (dim >= (get_max_dim qqvec));
+  let qqvec_enum = QQVector.enum qqvec in
+  let zzarray = Array.make dim ZZ.zero in
+  let lcm_den = BatEnum.fold
+  (fun lcm_den (qq, _) -> let (_, den) = QQ.to_zzfrac qq in (ZZ.lcm den lcm_den))
+  ZZ.one qqvec_enum in
+  BatEnum.fold (fun () (qq, dim) -> 
+    match QQ.to_zz (QQ.mul (QQ.of_zz lcm_den) qq) with
+    | Some zz -> zzarray.(dim) <- zz
+    | None -> failwith "normalization by lcm did not work"
+  ) () qqvec_enum;
+  zzarray
+
+(* converts an array of ZZ's to QQvector *)
+let zzarray_to_qqvector zzarray = 
+  QQVector.of_list (List.mapi (fun i zz -> (QQ.of_zz zz, i)) (Array.to_list zzarray))

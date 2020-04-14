@@ -47,3 +47,14 @@ val project : int list -> t -> t
     linearly and are "easy" to eliminate.  Symbols that do not appear linearly
     are not projected.  *)
 val try_fourier_motzkin : 'a CoordinateSystem.t -> (symbol -> bool) -> t -> t
+
+(* newly added functions start here *)
+(* get the maximum QQVector dimension and number of constraints of polyhedron *)
+val get_max_dim_and_num_constr : t -> int * int
+
+(* convert from srk polyhedron format to libnormaliz format *)
+val convert_to_libnormaliz_fmt : t -> ZZ.t array array
+
+(* convert from libnormaliz format to srk polyhedron format *)
+val convert_from_libnormaliz_fmt : ZZ.t array array -> t
+

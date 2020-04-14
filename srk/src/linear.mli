@@ -277,3 +277,13 @@ val term_of_vec : ('a context) -> (int -> 'a term) -> QQVector.t -> 'a term
    given interpretation (the interpretation of [const_dim] is fixed to
    be 1).  *)
 val evaluate_affine : (int -> QQ.t) -> QQVector.t -> QQ.t
+
+(* newly added functions start here *)
+(* get the maximum dimension of the QQVector *)
+val get_max_dim : QQVector.t -> int
+
+(* convert QQVector to array of ZZ's of given size *)
+val qqvector_to_zzarray : int -> QQVector.t -> ZZ.t array
+
+(* convert array of ZZ's to QQVector *)
+val zzarray_to_qqvector : ZZ.t array -> QQVector.t

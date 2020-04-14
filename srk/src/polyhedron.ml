@@ -333,3 +333,46 @@ let try_fourier_motzkin cs p polyhedron =
   in
   Log.time "Fourier-Motzkin"
     (List.fold_left (project_one 10) polyhedron) projected_linear
+
+(* start of newly added code *)
+let get_max_dim_and_num_constr polyhedron = 
+  P.fold (fun (cmp, qqvec) (max_dim, num_constr) -> 
+    let local_max_dim = Linear.get_max_dim qqvec in
+    ((if max_dim > local_max_dim then max_dim else local_max_dim), 
+      match cmp with
+      | Eq -> num_constr + 2
+      | Gt | Geq -> num_constr + 1
+    )
+  ) polyhedron (0, 0)
+
+(* converts srk polyhedron format to array of arrays *)
+let convert_to_libnormaliz_fmt polyhedron =
+  let (max_dim, num_constr) = get_max_dim_and_num_constr polyhedron in
+  let constraint_array = Array.make_matrix num_constr max_dim ZZ.zero in
+  let _ = P.fold (fun (cmp, qqvec) idx -> 
+    begin match cmp with
+    | Eq -> (
+      Array.iteri (fun i zz -> constraint_array.(idx).(i) <- zz) 
+      (Linear.qqvector_to_zzarray max_dim qqvec);
+      Array.iteri (fun i zz -> constraint_array.(idx + 1).(i) <- zz) 
+      (Linear.qqvector_to_zzarray max_dim (Linear.QQVector.negate qqvec));
+      idx + 2
+    )
+    | Geq | Gt -> (
+      Array.iteri (fun i zz -> constraint_array.(idx).(i) <- zz) 
+      (Linear.qqvector_to_zzarray max_dim qqvec);
+      idx + 1
+    )
+    end
+  ) polyhedron 0 in
+  constraint_array
+
+(* convert from libnormaliz's array of arrays to srk polyhedron format *)
+let convert_from_libnormaliz_fmt constraint_array = 
+  for i=1 to (Array.length constraint_array) - 1 do
+    if Array.length constraint_array.(i) <> Array.length constraint_array.(i-1) then
+    failwith "all constraints do not have same length"
+  done;
+  Array.fold_left (fun polyhedron zzarray -> 
+    P.add (Geq, Linear.zzarray_to_qqvector zzarray) polyhedron)
+  P.top constraint_array
