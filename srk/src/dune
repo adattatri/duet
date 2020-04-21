@@ -12,7 +12,7 @@
     OCRS
     ntl
     ocamlgraph
-    libnormaliz)
+    normaliz)
   (preprocess (pps ppx_deriving.ord ppx_deriving.eq ppx_deriving.show)))
 
 (executable
@@ -20,10 +20,8 @@
   (modules bigtop)
   (modes native)
   (promote (until-clean) (into ..))
-  (libraries srk oUnit apron apron.boxMPQ apron.octMPQ apron.polkaMPQ libnormaliz)
-  (preprocess (pps ppx_deriving.ord ppx_deriving.eq ppx_deriving.show))
-  (link_flags -cclib /home/adithya/Downloads/ocaml-libnormaliz-modern/Normaliz/local/lib/libnormaliz.a -cclib -lstdc++ -cclib -lgmp -cclib -lgmpxx )
-)
+  (libraries srk oUnit apron apron.boxMPQ apron.octMPQ apron.polkaMPQ normaliz)
+  (preprocess (pps ppx_deriving.ord ppx_deriving.eq ppx_deriving.show)))
 
 (ocamllex
   (modules srkLex))

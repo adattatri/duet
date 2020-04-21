@@ -866,29 +866,38 @@ module PartialLinearMap = struct
     (mS, make mT guard)
 end
 
-(* CHECK: might be able to simplify this, if all dimensions are stored explicitly *)
-let get_max_dim qqvec = 
-  let qqvec_enum = QQVector.enum qqvec in
-  BatEnum.fold (fun max_dim (_, dim) -> 
-    if dim > max_dim then dim
-    else max_dim
-  ) 0 qqvec_enum
-
 (* newly added functions start here *)
-let qqvector_to_zzarray dim qqvec = 
-  assert (dim >= (get_max_dim qqvec));
-  let qqvec_enum = QQVector.enum qqvec in
-  let zzarray = Array.make dim ZZ.zero in
-  let lcm_den = BatEnum.fold
-  (fun lcm_den (qq, _) -> let (_, den) = QQ.to_zzfrac qq in (ZZ.lcm den lcm_den))
-  ZZ.one qqvec_enum in
+let get_num_dim qqvec = 
+  (* NOTE: + 2 is used here to account for the constant term *)
+  (BatEnum.fold (fun max_dim (_, dim) -> max max_dim dim) 
+  0 (QQVector.enum qqvec)) + 2
+
+let qqvector_to_zzarray num_elements qqvec = 
+  (* print_string "qqvector_to_zzarray\n"; *)
+  (* print_string (QQVector.show qqvec); print_newline (); *)
+  assert (num_elements >= (get_num_dim qqvec));
+  let zzarray = Array.make num_elements ZZ.zero in
+  let lcm_denom = BatEnum.fold (fun lcm_denom (qq, _) -> 
+    let (_, den) = QQ.to_zzfrac qq in (ZZ.lcm den lcm_denom))
+    ZZ.one (QQVector.enum qqvec) in
+  (* CHECK: if the constant term in the QQVector is handled correctly *)
   BatEnum.fold (fun () (qq, dim) -> 
-    match QQ.to_zz (QQ.mul (QQ.of_zz lcm_den) qq) with
-    | Some zz -> zzarray.(dim) <- zz
+    match QQ.to_zz (QQ.mul (QQ.of_zz lcm_denom) qq) with
+    | Some zz -> (if dim = -1 then zzarray.(num_elements - 1) <- zz 
+                  else zzarray.(dim) <- zz)  
     | None -> failwith "normalization by lcm did not work"
-  ) () qqvec_enum;
+  ) () (QQVector.enum qqvec);
   zzarray
 
 (* converts an array of ZZ's to QQvector *)
 let zzarray_to_qqvector zzarray = 
-  QQVector.of_list (List.mapi (fun i zz -> (QQ.of_zz zz, i)) (Array.to_list zzarray))
+  (* CHECK: if constant terms are handled correctly here *)
+  let num_elements = Array.length zzarray in
+  let qqvec = 
+  zzarray |> Array.to_list |> List.mapi (fun i zz -> 
+    if i = num_elements - 1 then (QQ.of_zz zz, -1)
+    else (QQ.of_zz zz, i)) 
+  |> QQVector.of_list in
+  (* print_string "zzvector_to_qqvector\n"; *)
+  (* print_string (QQVector.show qqvec); print_newline (); *)
+  qqvec

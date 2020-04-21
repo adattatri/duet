@@ -337,8 +337,8 @@ let try_fourier_motzkin cs p polyhedron =
 (* start of newly added code *)
 let get_max_dim_and_num_constr polyhedron = 
   P.fold (fun (cmp, qqvec) (max_dim, num_constr) -> 
-    let local_max_dim = Linear.get_max_dim qqvec in
-    ((if max_dim > local_max_dim then max_dim else local_max_dim), 
+    let local_max_dim = Linear.get_num_dim qqvec in
+    (max local_max_dim max_dim, 
       match cmp with
       | Eq -> num_constr + 2
       | Gt | Geq -> num_constr + 1

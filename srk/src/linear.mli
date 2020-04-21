@@ -280,7 +280,7 @@ val evaluate_affine : (int -> QQ.t) -> QQVector.t -> QQ.t
 
 (* newly added functions start here *)
 (* get the maximum dimension of the QQVector *)
-val get_max_dim : QQVector.t -> int
+val get_num_dim : QQVector.t -> int
 
 (* convert QQVector to array of ZZ's of given size *)
 val qqvector_to_zzarray : int -> QQVector.t -> ZZ.t array
