@@ -259,7 +259,7 @@ let project_one max_add polyhedron x =
     in
     let nb_lower = List.length lower in
     let nb_upper = List.length upper in
-    if max_add > 0 && max_add > (nb_lower*nb_upper-nb_lower-nb_upper) then
+    if max_add < 0 || max_add > (nb_lower*nb_upper-nb_lower-nb_upper) then
       List.fold_left (fun polyhedron (strict, lo) ->
           List.fold_left (fun polyhedron (strict', hi) ->
               if strict || strict' then
@@ -358,8 +358,18 @@ let convert_to_libnormaliz_fmt polyhedron =
       (Linear.qqvector_to_zzarray max_dim (Linear.QQVector.negate qqvec));
       idx + 2
     )
-    | Geq | Gt -> (
+    | Geq -> (
       Array.iteri (fun i zz -> constraint_array.(idx).(i) <- zz) 
+      (Linear.qqvector_to_zzarray max_dim qqvec);
+      idx + 1
+    )
+    | Gt -> (
+      Array.iteri (fun i zz -> 
+        if i = (Array.length constraint_array.(idx)) - 1 then
+          constraint_array.(idx).(i) <- ZZ.sub zz ZZ.one
+        else
+          constraint_array.(idx).(i) <- zz
+      ) 
       (Linear.qqvector_to_zzarray max_dim qqvec);
       idx + 1
     )
